@@ -1,4 +1,4 @@
-import { useUser } from '@/contexts/UserContext';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { StatCard } from '@/components/StatCard';
 import { CourseCard } from '@/components/CourseCard';
 import { mockCourses, mockUsers, mockInterviews } from '@/data/mockData';
@@ -7,10 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 
 export default function Dashboard() {
-  const { user } = useUser();
+  const { role } = useAuthContext();
 
   const getStatsForRole = () => {
-    switch (user?.role) {
+    switch (role) {
       case 'gestor':
         return [
           { title: 'Total Socios', value: mockUsers.filter(u => u.role === 'socio').length, icon: <Users className="w-6 h-6" />, trend: { value: 12, isPositive: true } },
@@ -52,10 +52,10 @@ export default function Dashboard() {
       <div>
         <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
         <p className="text-muted-foreground mt-1">
-          {user?.role === 'gestor' && 'Visión general del sistema de integración'}
-          {user?.role === 'monitor' && 'Gestiona el seguimiento de tus socios asignados'}
-          {user?.role === 'professor' && 'Administra tus cursos y estudiantes'}
-          {user?.role === 'socio' && 'Tu progreso en el programa de integración'}
+          {role === 'gestor' && 'Visión general del sistema de integración'}
+          {role === 'monitor' && 'Gestiona el seguimiento de tus socios asignados'}
+          {role === 'professor' && 'Administra tus cursos y estudiantes'}
+          {role === 'socio' && 'Tu progreso en el programa de integración'}
         </p>
       </div>
 
@@ -76,10 +76,10 @@ export default function Dashboard() {
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-lg font-semibold text-foreground">
-              {user?.role === 'socio' ? 'Cursos Disponibles' : 'Cursos Recientes'}
+              {role === 'socio' ? 'Cursos Disponibles' : 'Cursos Recientes'}
             </h2>
             <p className="text-sm text-muted-foreground">
-              {user?.role === 'socio' ? 'Explora y inscríbete en nuevos cursos' : 'Últimas actualizaciones en el catálogo'}
+              {role === 'socio' ? 'Explora y inscríbete en nuevos cursos' : 'Últimas actualizaciones en el catálogo'}
             </p>
           </div>
           <Button variant="outline" asChild>
@@ -101,7 +101,7 @@ export default function Dashboard() {
       </div>
 
       {/* Quick Actions */}
-      {user?.role === 'gestor' && (
+      {role === 'gestor' && (
         <div className="bg-card rounded-xl border border-border p-6">
           <h2 className="text-lg font-semibold text-foreground mb-4">Acciones Rápidas</h2>
           <div className="flex flex-wrap gap-3">

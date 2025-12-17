@@ -3,11 +3,11 @@ import { Outlet } from 'react-router-dom';
 import { AppSidebar, SidebarTrigger } from '@/components/AppSidebar';
 import { Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useUser } from '@/contexts/UserContext';
+import { useAuthContext } from '@/contexts/AuthContext';
 
 export function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { user } = useUser();
+  const { profile } = useAuthContext();
 
   return (
     <div className="min-h-screen bg-background">
@@ -22,7 +22,7 @@ export function Layout() {
               <SidebarTrigger onClick={() => setSidebarOpen(!sidebarOpen)} />
               <div>
                 <p className="text-sm text-muted-foreground">Bienvenido/a,</p>
-                <h1 className="text-lg font-semibold">{user?.name || 'Usuario'}</h1>
+                <h1 className="text-lg font-semibold">{profile?.name || 'Usuario'}</h1>
               </div>
             </div>
             
