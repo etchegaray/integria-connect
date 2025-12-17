@@ -8,26 +8,24 @@ import {
   GraduationCap,
   ClipboardList,
   UserCog,
-  Menu
+  Menu,
+  LogOut
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useUser } from '@/contexts/UserContext';
-import { UserRole } from '@/types';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
+import { Database } from '@/integrations/supabase/types';
+
+type AppRole = Database['public']['Enums']['app_role'];
 
 interface NavItem {
   label: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
-  roles: UserRole[];
+  roles: AppRole[];
 }
 
 const navigationItems: NavItem[] = [
@@ -41,18 +39,18 @@ const navigationItems: NavItem[] = [
   { label: 'Configuración', href: '/settings', icon: Settings, roles: ['gestor'] },
 ];
 
-const roleLabels: Record<UserRole, string> = {
+const roleLabels: Record<AppRole, string> = {
   socio: 'Socio',
   monitor: 'Monitor',
   professor: 'Profesor',
   gestor: 'Gestor',
 };
 
-const roleColors: Record<UserRole, string> = {
-  socio: 'bg-role-socio',
-  monitor: 'bg-role-monitor',
-  professor: 'bg-role-professor',
-  gestor: 'bg-role-gestor',
+const roleColors: Record<AppRole, string> = {
+  socio: 'bg-blue-500',
+  monitor: 'bg-green-500',
+  professor: 'bg-purple-500',
+  gestor: 'bg-orange-500',
 };
 
 interface AppSidebarProps {
@@ -62,11 +60,27 @@ interface AppSidebarProps {
 
 export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
   const location = useLocation();
-  const { user, switchRole } = useUser();
+  const { profile, role, signOut, loading } = useAuthContext();
+  const { toast } = useToast();
 
   const filteredNavItems = navigationItems.filter(
-    item => user && item.roles.includes(user.role)
+    item => role && item.roles.includes(role)
   );
+
+  const handleLogout = async () => {
+    const { error } = await signOut();
+    if (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'No se pudo cerrar sesión',
+      });
+    }
+  };
+
+  const getInitials = (name: string) => {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  };
 
   return (
     <>
@@ -97,39 +111,28 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
         </div>
 
         {/* User Info */}
-        {user && (
+        {profile && !loading && (
           <div className="p-4 border-b border-sidebar-border">
             <div className="flex items-center gap-3 mb-3">
               <Avatar className="h-10 w-10">
+                {profile.avatar_url && <AvatarImage src={profile.avatar_url} alt={profile.name} />}
                 <AvatarFallback className="bg-primary/10 text-primary font-medium">
-                  {user.name.split(' ').map(n => n[0]).join('')}
+                  {getInitials(profile.name)}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-sidebar-foreground truncate">{user.name}</p>
-                <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                <p className="text-sm font-medium text-sidebar-foreground truncate">{profile.name}</p>
+                <p className="text-xs text-muted-foreground truncate">{profile.email}</p>
               </div>
             </div>
             
-            {/* Role Switcher (Demo) */}
-            <Select value={user.role} onValueChange={(value: UserRole) => switchRole(value)}>
-              <SelectTrigger className="w-full h-9 text-xs">
-                <div className="flex items-center gap-2">
-                  <span className={cn("w-2 h-2 rounded-full", roleColors[user.role])} />
-                  <SelectValue />
-                </div>
-              </SelectTrigger>
-              <SelectContent>
-                {(Object.keys(roleLabels) as UserRole[]).map(role => (
-                  <SelectItem key={role} value={role}>
-                    <div className="flex items-center gap-2">
-                      <span className={cn("w-2 h-2 rounded-full", roleColors[role])} />
-                      {roleLabels[role]}
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {/* Role Badge */}
+            {role && (
+              <Badge variant="secondary" className="w-full justify-center">
+                <span className={cn("w-2 h-2 rounded-full mr-2", roleColors[role])} />
+                {roleLabels[role]}
+              </Badge>
+            )}
           </div>
         )}
 
@@ -163,8 +166,16 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
           </ul>
         </nav>
 
-        {/* Footer */}
-        <div className="p-4 border-t border-sidebar-border">
+        {/* Footer with Logout */}
+        <div className="p-4 border-t border-sidebar-border space-y-3">
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start text-muted-foreground hover:text-foreground"
+            onClick={handleLogout}
+          >
+            <LogOut className="w-4 h-4 mr-2" />
+            Cerrar sesión
+          </Button>
           <p className="text-xs text-muted-foreground text-center">
             IntegrIA Pro v1.0
           </p>

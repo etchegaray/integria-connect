@@ -5,14 +5,14 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Search, Filter, Plus } from 'lucide-react';
-import { useUser } from '@/contexts/UserContext';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
 export default function Courses() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Todos');
-  const { user } = useUser();
+  const { role } = useAuthContext();
   const { toast } = useToast();
 
   const filteredCourses = mockCourses.filter(course => {
@@ -47,7 +47,7 @@ export default function Courses() {
             Explora nuestra oferta formativa y encuentra el curso ideal para ti
           </p>
         </div>
-        {(user?.role === 'gestor' || user?.role === 'professor') && (
+        {(role === 'gestor' || role === 'professor') && (
           <Button className="gap-2">
             <Plus className="w-4 h-4" />
             Nuevo Curso
