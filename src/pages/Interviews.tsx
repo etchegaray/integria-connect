@@ -8,30 +8,37 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-
 const statusConfig = {
-  scheduled: { label: 'Programada', className: 'bg-primary/10 text-primary border-primary/20', icon: Clock },
-  completed: { label: 'Completada', className: 'bg-accent/10 text-accent border-accent/20', icon: CheckCircle },
-  cancelled: { label: 'Cancelada', className: 'bg-destructive/10 text-destructive border-destructive/20', icon: XCircle },
+  scheduled: {
+    label: 'Programada',
+    className: 'bg-primary/10 text-primary border-primary/20',
+    icon: Clock
+  },
+  completed: {
+    label: 'Completada',
+    className: 'bg-accent/10 text-accent border-accent/20',
+    icon: CheckCircle
+  },
+  cancelled: {
+    label: 'Cancelada',
+    className: 'bg-destructive/10 text-destructive border-destructive/20',
+    icon: XCircle
+  }
 };
-
 export default function Interviews() {
-  const { toast } = useToast();
-
+  const {
+    toast
+  } = useToast();
   const getUserById = (id: string) => mockUsers.find(u => u.id === id);
-
   const handleNewInterview = () => {
     toast({
       title: "Nueva entrevista",
-      description: "Funcionalidad próximamente disponible",
+      description: "Funcionalidad próximamente disponible"
     });
   };
-
   const scheduledInterviews = mockInterviews.filter(i => i.status === 'scheduled');
   const completedInterviews = mockInterviews.filter(i => i.status === 'completed');
-
-  return (
-    <div className="space-y-6 animate-fade-in">
+  return <div className="space-y-6 animate-fade-in">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -91,20 +98,15 @@ export default function Interviews() {
 
       {/* Upcoming Interviews */}
       <div>
-        <h2 className="text-lg font-semibold mb-4">Próximas Entrevistas</h2>
+        <h2 className="text-lg font-semibold mb-4">Próximas Entrevistas previstas</h2>
         <div className="grid gap-4">
-          {scheduledInterviews.length > 0 ? (
-            scheduledInterviews.map((interview, index) => {
-              const socio = getUserById(interview.socioId);
-              const status = statusConfig[interview.status];
-              const StatusIcon = status.icon;
-
-              return (
-                <Card 
-                  key={interview.id}
-                  className="animate-slide-in hover:shadow-medium transition-shadow"
-                  style={{ animationDelay: `${index * 50}ms` } as React.CSSProperties}
-                >
+          {scheduledInterviews.length > 0 ? scheduledInterviews.map((interview, index) => {
+          const socio = getUserById(interview.socioId);
+          const status = statusConfig[interview.status];
+          const StatusIcon = status.icon;
+          return <Card key={interview.id} className="animate-slide-in hover:shadow-medium transition-shadow" style={{
+            animationDelay: `${index * 50}ms`
+          } as React.CSSProperties}>
                   <CardContent className="p-4">
                     <div className="flex items-start gap-4">
                       <Avatar className="h-12 w-12">
@@ -126,7 +128,9 @@ export default function Interviews() {
                         <div className="flex items-center gap-4 mt-3 text-sm text-muted-foreground">
                           <span className="flex items-center gap-1">
                             <Calendar className="w-4 h-4" />
-                            {format(interview.date, "d 'de' MMMM, yyyy", { locale: es })}
+                            {format(interview.date, "d 'de' MMMM, yyyy", {
+                        locale: es
+                      })}
                           </span>
                         </div>
                         <div className="flex items-start gap-2 mt-3 p-3 bg-muted/50 rounded-lg">
@@ -136,11 +140,8 @@ export default function Interviews() {
                       </div>
                     </div>
                   </CardContent>
-                </Card>
-              );
-            })
-          ) : (
-            <Card>
+                </Card>;
+        }) : <Card>
               <CardContent className="p-8 text-center">
                 <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                 <h3 className="font-semibold text-foreground mb-2">No hay entrevistas programadas</h3>
@@ -152,26 +153,20 @@ export default function Interviews() {
                   Nueva Entrevista
                 </Button>
               </CardContent>
-            </Card>
-          )}
+            </Card>}
         </div>
       </div>
 
       {/* Completed Interviews */}
-      {completedInterviews.length > 0 && (
-        <div>
+      {completedInterviews.length > 0 && <div>
           <h2 className="text-lg font-semibold mb-4">Entrevistas Completadas</h2>
           <div className="grid gap-4">
             {completedInterviews.map((interview, index) => {
-              const socio = getUserById(interview.socioId);
-              const status = statusConfig[interview.status];
-
-              return (
-                <Card 
-                  key={interview.id}
-                  className="bg-muted/30 animate-slide-in"
-                  style={{ animationDelay: `${(index + scheduledInterviews.length) * 50}ms` } as React.CSSProperties}
-                >
+          const socio = getUserById(interview.socioId);
+          const status = statusConfig[interview.status];
+          return <Card key={interview.id} className="bg-muted/30 animate-slide-in" style={{
+            animationDelay: `${(index + scheduledInterviews.length) * 50}ms`
+          } as React.CSSProperties}>
                   <CardContent className="p-4">
                     <div className="flex items-center gap-4">
                       <Avatar className="h-10 w-10">
@@ -182,7 +177,9 @@ export default function Interviews() {
                       <div className="flex-1 min-w-0">
                         <h3 className="font-medium text-foreground">{socio?.name || 'Socio'}</h3>
                         <p className="text-sm text-muted-foreground">
-                          {format(interview.date, "d 'de' MMMM, yyyy", { locale: es })}
+                          {format(interview.date, "d 'de' MMMM, yyyy", {
+                      locale: es
+                    })}
                         </p>
                       </div>
                       <Badge variant="outline" className={status.className}>
@@ -190,12 +187,9 @@ export default function Interviews() {
                       </Badge>
                     </div>
                   </CardContent>
-                </Card>
-              );
-            })}
+                </Card>;
+        })}
           </div>
-        </div>
-      )}
-    </div>
-  );
+        </div>}
+    </div>;
 }
