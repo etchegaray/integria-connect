@@ -9,6 +9,7 @@ import { Layout } from "@/components/Layout";
 import Dashboard from "@/pages/Dashboard";
 import Courses from "@/pages/Courses";
 import UsersManagement from "@/pages/UsersManagement";
+import MonitorAssignments from "@/pages/MonitorAssignments";
 import Interviews from "@/pages/Interviews";
 import Auth from "@/pages/Auth";
 import ResetPassword from "@/pages/ResetPassword";
@@ -38,6 +39,7 @@ const App = () => (
               <Route path="/" element={<Dashboard />} />
               <Route path="/courses" element={<Courses />} />
               <Route path="/users" element={<UsersManagement />} />
+              <Route path="/monitor-assignments" element={<MonitorAssignments />} />
               <Route path="/interviews" element={<Interviews />} />
               <Route path="/enrollments" element={<EnrollmentsPage />} />
               <Route path="/students" element={<StudentsPage />} />

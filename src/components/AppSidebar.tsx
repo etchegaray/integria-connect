@@ -8,6 +8,7 @@ import {
   GraduationCap,
   ClipboardList,
   UserCog,
+  UsersRound,
   Menu,
   LogOut
 } from 'lucide-react';
@@ -36,6 +37,7 @@ const navigationItems: NavItem[] = [
   { label: 'Mis Estudiantes', href: '/students', icon: Users, roles: ['professor', 'monitor'] },
   { label: 'Calendario', href: '/calendar', icon: Calendar, roles: ['monitor', 'professor', 'gestor'] },
   { label: 'Gestión Usuarios', href: '/users', icon: UserCog, roles: ['gestor'] },
+  { label: 'Asignación Monitores', href: '/monitor-assignments', icon: UsersRound, roles: ['gestor'] },
   { label: 'Configuración', href: '/settings', icon: Settings, roles: ['gestor'] },
 ];
 

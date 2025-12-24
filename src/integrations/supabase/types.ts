@@ -133,6 +133,30 @@ export type Database = {
         }
         Relationships: []
       }
+      monitor_assignments: {
+        Row: {
+          assigned_at: string
+          id: string
+          monitor_id: string
+          notes: string | null
+          socio_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          id?: string
+          monitor_id: string
+          notes?: string | null
+          socio_id: string
+        }
+        Update: {
+          assigned_at?: string
+          id?: string
+          monitor_id?: string
+          notes?: string | null
+          socio_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
