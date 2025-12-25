@@ -74,8 +74,10 @@ export default function Interviews() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (role) {
+      fetchData();
+    }
+  }, [role, user?.id]);
 
   const fetchData = async () => {
     try {
@@ -101,13 +103,28 @@ export default function Interviews() {
 
       if (rolesError) throw rolesError;
 
-      const socioIds = rolesData.filter(r => r.role === 'socio').map(r => r.user_id);
       const monitorIds = rolesData.filter(r => r.role === 'monitor').map(r => r.user_id);
 
       setInterviews(interviewsData || []);
       setProfiles(profilesData || []);
-      setSocios((profilesData || []).filter(p => socioIds.includes(p.id)));
       setMonitors((profilesData || []).filter(p => monitorIds.includes(p.id)));
+
+      // Si es monitor, obtener solo los socios asignados a él
+      if (role === 'monitor' && user?.id) {
+        const { data: assignmentsData, error: assignmentsError } = await supabase
+          .from('monitor_assignments')
+          .select('socio_id')
+          .eq('monitor_id', user.id);
+
+        if (assignmentsError) throw assignmentsError;
+
+        const assignedSocioIds = (assignmentsData || []).map(a => a.socio_id);
+        setSocios((profilesData || []).filter(p => assignedSocioIds.includes(p.id)));
+      } else {
+        // Si es gestor, mostrar todos los socios
+        const socioIds = rolesData.filter(r => r.role === 'socio').map(r => r.user_id);
+        setSocios((profilesData || []).filter(p => socioIds.includes(p.id)));
+      }
     } catch (error) {
       console.error('Error fetching data:', error);
       toast({
