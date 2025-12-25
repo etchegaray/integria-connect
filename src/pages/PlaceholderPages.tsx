@@ -30,9 +30,6 @@ export function StudentsPage() {
   return <PlaceholderPage title="Mis Estudiantes" description="Gestiona y haz seguimiento de tus estudiantes asignados. Esta funcionalidad estará disponible próximamente." />;
 }
 
-export function CalendarPage() {
-  return <PlaceholderPage title="Calendario" description="Visualiza y organiza todas tus actividades en un calendario interactivo. Esta funcionalidad estará disponible próximamente." />;
-}
 
 export function SettingsPage() {
   return <PlaceholderPage title="Configuración" description="Personaliza la configuración del sistema según tus necesidades. Esta funcionalidad estará disponible próximamente." />;

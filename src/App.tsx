@@ -13,7 +13,8 @@ import MonitorAssignments from "@/pages/MonitorAssignments";
 import Interviews from "@/pages/Interviews";
 import Auth from "@/pages/Auth";
 import ResetPassword from "@/pages/ResetPassword";
-import { EnrollmentsPage, StudentsPage, CalendarPage, SettingsPage } from "@/pages/PlaceholderPages";
+import Calendar from "@/pages/Calendar";
+import { EnrollmentsPage, StudentsPage, SettingsPage } from "@/pages/PlaceholderPages";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -43,7 +44,7 @@ const App = () => (
               <Route path="/interviews" element={<Interviews />} />
               <Route path="/enrollments" element={<EnrollmentsPage />} />
               <Route path="/students" element={<StudentsPage />} />
-              <Route path="/calendar" element={<CalendarPage />} />
+              <Route path="/calendar" element={<Calendar />} />
               <Route path="/settings" element={<SettingsPage />} />
             </Route>
             
