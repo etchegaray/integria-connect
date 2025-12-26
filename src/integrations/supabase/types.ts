@@ -14,18 +14,107 @@ export type Database = {
   }
   public: {
     Tables: {
+      attendance: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          session_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          session_id: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          session_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "course_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      course_sessions: {
+        Row: {
+          course_id: string
+          created_at: string
+          end_time: string
+          id: string
+          is_cancelled: boolean | null
+          location: string | null
+          notes: string | null
+          session_date: string
+          start_time: string
+          updated_at: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          end_time: string
+          id?: string
+          is_cancelled?: boolean | null
+          location?: string | null
+          notes?: string | null
+          session_date: string
+          start_time: string
+          updated_at?: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          end_time?: string
+          id?: string
+          is_cancelled?: boolean | null
+          location?: string | null
+          notes?: string | null
+          session_date?: string
+          start_time?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_sessions_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       courses: {
         Row: {
           category: string
           created_at: string
           description: string | null
           duration: string
+          end_date: string | null
           enrolled_count: number
           id: string
           image_url: string | null
           instructor_id: string | null
           instructor_name: string
           max_capacity: number
+          min_capacity: number
+          schedule_days: string[] | null
+          schedule_time: string | null
           start_date: string
           status: Database["public"]["Enums"]["course_status"]
           title: string
@@ -36,12 +125,16 @@ export type Database = {
           created_at?: string
           description?: string | null
           duration: string
+          end_date?: string | null
           enrolled_count?: number
           id?: string
           image_url?: string | null
           instructor_id?: string | null
           instructor_name: string
           max_capacity?: number
+          min_capacity?: number
+          schedule_days?: string[] | null
+          schedule_time?: string | null
           start_date: string
           status?: Database["public"]["Enums"]["course_status"]
           title: string
@@ -52,12 +145,16 @@ export type Database = {
           created_at?: string
           description?: string | null
           duration?: string
+          end_date?: string | null
           enrolled_count?: number
           id?: string
           image_url?: string | null
           instructor_id?: string | null
           instructor_name?: string
           max_capacity?: number
+          min_capacity?: number
+          schedule_days?: string[] | null
+          schedule_time?: string | null
           start_date?: string
           status?: Database["public"]["Enums"]["course_status"]
           title?: string
