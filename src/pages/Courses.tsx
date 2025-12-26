@@ -1,40 +1,143 @@
-import { useState } from 'react';
-import { mockCourses, categories } from '@/data/mockData';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { CourseCard } from '@/components/CourseCard';
+import { CourseFormDialog } from '@/components/courses/CourseFormDialog';
+import { CourseSessionsDialog } from '@/components/courses/CourseSessionsDialog';
+import { CourseEnrollmentsDialog } from '@/components/courses/CourseEnrollmentsDialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Search, Filter, Plus } from 'lucide-react';
+import { Search, Filter, Plus, Pencil, Calendar, Users, Loader2 } from 'lucide-react';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
+interface Course {
+  id: string;
+  title: string;
+  description: string | null;
+  instructor_id: string | null;
+  instructor_name: string;
+  duration: string;
+  category: string;
+  image_url: string | null;
+  enrolled_count: number;
+  max_capacity: number;
+  min_capacity: number;
+  start_date: string;
+  end_date: string | null;
+  schedule_days: string[] | null;
+  schedule_time: string | null;
+  status: 'active' | 'upcoming' | 'completed';
+}
+
+const CATEGORIES = ['Todos', 'Tecnología', 'Idiomas', 'Arte', 'Música', 'Deportes', 'Cocina', 'Negocios', 'Salud', 'Otro'];
+
 export default function Courses() {
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Todos');
-  const { role } = useAuthContext();
+  const [formDialogOpen, setFormDialogOpen] = useState(false);
+  const [sessionsDialogOpen, setSessionsDialogOpen] = useState(false);
+  const [enrollmentsDialogOpen, setEnrollmentsDialogOpen] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  const { role, user } = useAuthContext();
   const { toast } = useToast();
 
-  const filteredCourses = mockCourses.filter(course => {
+  useEffect(() => {
+    fetchCourses();
+  }, []);
+
+  async function fetchCourses() {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('courses')
+        .select('*')
+        .order('start_date', { ascending: true });
+
+      if (error) throw error;
+      setCourses(data || []);
+    } catch (error: any) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  const filteredCourses = courses.filter(course => {
     const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         course.description.toLowerCase().includes(searchQuery.toLowerCase());
+                         (course.description?.toLowerCase().includes(searchQuery.toLowerCase()) || false);
     const matchesCategory = selectedCategory === 'Todos' || course.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
-  const handleEnroll = (courseId: string) => {
-    const course = mockCourses.find(c => c.id === courseId);
-    toast({
-      title: "¡Inscripción exitosa!",
-      description: `Te has inscrito en "${course?.title}"`,
-    });
+  const handleEnroll = async (courseId: string) => {
+    if (!user) {
+      toast({ title: 'Error', description: 'Debes iniciar sesión para inscribirte', variant: 'destructive' });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('enrollments')
+        .insert({
+          course_id: courseId,
+          user_id: user.id,
+        });
+
+      if (error) {
+        if (error.code === '23505') {
+          toast({ title: 'Ya inscrito', description: 'Ya estás inscrito en este curso' });
+        } else {
+          throw error;
+        }
+        return;
+      }
+
+      const course = courses.find(c => c.id === courseId);
+      toast({
+        title: '¡Inscripción exitosa!',
+        description: `Te has inscrito en "${course?.title}"`,
+      });
+      fetchCourses();
+    } catch (error: any) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    }
   };
 
   const handleView = (courseId: string) => {
-    toast({
-      title: "Detalles del curso",
-      description: "Esta funcionalidad estará disponible próximamente.",
-    });
+    const course = courses.find(c => c.id === courseId);
+    if (course && role === 'gestor') {
+      setSelectedCourse(course);
+      setEnrollmentsDialogOpen(true);
+    } else {
+      toast({
+        title: 'Detalles del curso',
+        description: 'Esta funcionalidad estará disponible próximamente.',
+      });
+    }
+  };
+
+  const handleEdit = (course: Course) => {
+    setSelectedCourse(course);
+    setFormDialogOpen(true);
+  };
+
+  const handleManageSessions = (course: Course) => {
+    setSelectedCourse(course);
+    setSessionsDialogOpen(true);
+  };
+
+  const handleManageEnrollments = (course: Course) => {
+    setSelectedCourse(course);
+    setEnrollmentsDialogOpen(true);
+  };
+
+  const handleNewCourse = () => {
+    setSelectedCourse(null);
+    setFormDialogOpen(true);
   };
 
   return (
@@ -47,8 +150,8 @@ export default function Courses() {
             Explora nuestra oferta formativa y encuentra el curso ideal para ti
           </p>
         </div>
-        {(role === 'gestor' || role === 'professor') && (
-          <Button className="gap-2">
+        {role === 'gestor' && (
+          <Button className="gap-2" onClick={handleNewCourse}>
             <Plus className="w-4 h-4" />
             Nuevo Curso
           </Button>
@@ -72,7 +175,7 @@ export default function Courses() {
           {/* Category Filter */}
           <div className="flex items-center gap-2 overflow-x-auto pb-2 lg:pb-0">
             <Filter className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-            {categories.map(category => (
+            {CATEGORIES.map(category => (
               <Badge
                 key={category}
                 variant={selectedCategory === category ? 'default' : 'outline'}
@@ -99,7 +202,11 @@ export default function Courses() {
       </div>
 
       {/* Course Grid */}
-      {filteredCourses.length > 0 ? (
+      {isLoading ? (
+        <div className="flex justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      ) : filteredCourses.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredCourses.map((course, index) => (
             <div 
@@ -107,11 +214,56 @@ export default function Courses() {
               className="animate-slide-in"
               style={{ animationDelay: `${index * 50}ms` } as React.CSSProperties}
             >
-              <CourseCard 
-                course={course} 
-                onEnroll={handleEnroll}
-                onView={handleView}
-              />
+              <div className="relative">
+                <CourseCard 
+                  course={{
+                    id: course.id,
+                    title: course.title,
+                    description: course.description || '',
+                    instructor: course.instructor_name,
+                    duration: course.duration,
+                    category: course.category,
+                    enrolledCount: course.enrolled_count,
+                    maxCapacity: course.max_capacity,
+                    startDate: new Date(course.start_date),
+                    status: course.status,
+                    image: course.image_url || undefined,
+                  }}
+                  onEnroll={handleEnroll}
+                  onView={handleView}
+                />
+                {role === 'gestor' && (
+                  <div className="absolute top-4 right-4 flex gap-1">
+                    <Button
+                      size="icon"
+                      variant="secondary"
+                      className="h-8 w-8"
+                      onClick={() => handleEdit(course)}
+                      title="Editar curso"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="secondary"
+                      className="h-8 w-8"
+                      onClick={() => handleManageSessions(course)}
+                      title="Gestionar sesiones"
+                    >
+                      <Calendar className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="secondary"
+                      className="h-8 w-8"
+                      onClick={() => handleManageEnrollments(course)}
+                      title="Ver inscritos"
+                    >
+                      <Users className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
           ))}
         </div>
@@ -136,6 +288,26 @@ export default function Courses() {
           </Button>
         </div>
       )}
+
+      {/* Dialogs */}
+      <CourseFormDialog
+        open={formDialogOpen}
+        onOpenChange={setFormDialogOpen}
+        course={selectedCourse}
+        onSuccess={fetchCourses}
+      />
+
+      <CourseSessionsDialog
+        open={sessionsDialogOpen}
+        onOpenChange={setSessionsDialogOpen}
+        course={selectedCourse}
+      />
+
+      <CourseEnrollmentsDialog
+        open={enrollmentsDialogOpen}
+        onOpenChange={setEnrollmentsDialogOpen}
+        course={selectedCourse}
+      />
     </div>
   );
 }
