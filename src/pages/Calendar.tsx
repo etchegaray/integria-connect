@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { format, isSameDay, parseISO, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
+import { format, isSameDay, parseISO, eachDayOfInterval, getDay, addDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Loader2, BookOpen, Users, Calendar as CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -138,22 +138,73 @@ export default function CalendarPage() {
     return profiles.find(p => p.id === id)?.name || 'Desconocido';
   };
 
+  // Helper function to convert day name to day number (0 = Sunday, 1 = Monday, etc.)
+  const dayNameToNumber = (dayName: string): number => {
+    const days: { [key: string]: number } = {
+      'sunday': 0, 'domingo': 0,
+      'monday': 1, 'lunes': 1,
+      'tuesday': 2, 'martes': 2,
+      'wednesday': 3, 'miércoles': 3, 'miercoles': 3,
+      'thursday': 4, 'jueves': 4,
+      'friday': 5, 'viernes': 5,
+      'saturday': 6, 'sábado': 6, 'sabado': 6,
+    };
+    return days[dayName.toLowerCase()] ?? -1;
+  };
+
+  // Generate virtual sessions based on schedule_days for a course
+  const generateScheduledDates = (course: Course): Date[] => {
+    if (!course.schedule_days || course.schedule_days.length === 0) return [];
+    
+    const startDate = parseISO(course.start_date);
+    const endDate = course.end_date ? parseISO(course.end_date) : addDays(startDate, 90); // Default 90 days if no end date
+    
+    const scheduledDayNumbers = course.schedule_days
+      .map(d => dayNameToNumber(d))
+      .filter(n => n !== -1);
+    
+    if (scheduledDayNumbers.length === 0) return [];
+
+    const allDays = eachDayOfInterval({ start: startDate, end: endDate });
+    return allDays.filter(day => scheduledDayNumbers.includes(getDay(day)));
+  };
+
   const calendarEvents = useMemo((): CalendarEvent[] => {
     const events: CalendarEvent[] = [];
 
-    // For professors, add all session dates for their courses
+    // For professors, generate all session dates based on schedule_days
     if (role === 'professor') {
-      courseSessions.forEach(session => {
-        const course = courses.find(c => c.id === session.course_id);
-        if (course && course.instructor_id === user?.id) {
-          events.push({
-            id: `${session.id}`,
-            title: course.title,
-            date: parseISO(session.session_date),
-            type: 'course',
-            isHighlighted: true,
-            details: `${course.category} - ${session.start_time.slice(0, 5)}`,
-          });
+      courses.forEach(course => {
+        if (course.instructor_id === user?.id) {
+          // First check if there are existing sessions in the database
+          const existingSessions = courseSessions.filter(s => s.course_id === course.id);
+          
+          if (existingSessions.length > 0) {
+            // Use existing sessions from database
+            existingSessions.forEach(session => {
+              events.push({
+                id: `session-${session.id}`,
+                title: course.title,
+                date: parseISO(session.session_date),
+                type: 'course',
+                isHighlighted: true,
+                details: `${course.category} - ${session.start_time.slice(0, 5)}`,
+              });
+            });
+          } else {
+            // Generate virtual sessions based on schedule_days
+            const scheduledDates = generateScheduledDates(course);
+            scheduledDates.forEach((date, index) => {
+              events.push({
+                id: `virtual-${course.id}-${index}`,
+                title: course.title,
+                date: date,
+                type: 'course',
+                isHighlighted: true,
+                details: `${course.category} - ${course.schedule_time?.slice(0, 5) || 'Hora por definir'}`,
+              });
+            });
+          }
         }
       });
     } else {
