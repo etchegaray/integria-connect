@@ -12,6 +12,7 @@ import {
   Menu,
   LogOut
 } from 'lucide-react';
+import logoIrati from '@/assets/logo-irati.jpg';
 import { cn } from '@/lib/utils';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -103,12 +104,13 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
         )}
       >
         {/* Logo */}
-        <div className="h-16 flex items-center px-6 border-b border-sidebar-border">
-          <Link to="/" className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-sm">IA</span>
-            </div>
-            <span className="font-semibold text-lg text-sidebar-foreground">IntegrIA Pro</span>
+        <div className="h-20 flex items-center px-6 border-b border-sidebar-border">
+          <Link to="/" className="flex items-center">
+            <img 
+              src={logoIrati} 
+              alt="Irati Asociación" 
+              className="h-14 w-auto object-contain"
+            />
           </Link>
         </div>
 
@@ -179,7 +181,7 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
             Cerrar sesión
           </Button>
           <p className="text-xs text-muted-foreground text-center">
-            IntegrIA Pro v1.0
+            Irati Asociación v1.0
           </p>
         </div>
       </aside>
