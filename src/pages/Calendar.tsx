@@ -13,10 +13,21 @@ interface Course {
   id: string;
   title: string;
   start_date: string;
+  end_date: string | null;
+  schedule_days: string[] | null;
+  schedule_time: string | null;
   instructor_id: string | null;
   instructor_name: string;
   category: string;
   status: string;
+}
+
+interface CourseSession {
+  id: string;
+  course_id: string;
+  session_date: string;
+  start_time: string;
+  is_cancelled: boolean;
 }
 
 interface Enrollment {
@@ -52,6 +63,7 @@ export default function CalendarPage() {
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
   const [loading, setLoading] = useState(true);
   const [courses, setCourses] = useState<Course[]>([]);
+  const [courseSessions, setCourseSessions] = useState<CourseSession[]>([]);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [interviews, setInterviews] = useState<Interview[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
@@ -73,6 +85,15 @@ export default function CalendarPage() {
 
       if (coursesError) throw coursesError;
       setCourses(coursesData || []);
+
+      // Fetch all course sessions
+      const { data: sessionsData, error: sessionsError } = await supabase
+        .from('course_sessions')
+        .select('id, course_id, session_date, start_time, is_cancelled')
+        .eq('is_cancelled', false);
+
+      if (sessionsError) throw sessionsError;
+      setCourseSessions(sessionsData || []);
 
       // Fetch enrollments based on role
       if (role === 'socio' && user?.id) {
@@ -120,23 +141,38 @@ export default function CalendarPage() {
   const calendarEvents = useMemo((): CalendarEvent[] => {
     const events: CalendarEvent[] = [];
 
-    // Add course events
-    courses.forEach(course => {
-      const isHighlighted = role === 'socio' 
-        ? enrollments.some(e => e.course_id === course.id)
-        : role === 'professor'
-          ? course.instructor_id === user?.id
+    // For professors, add all session dates for their courses
+    if (role === 'professor') {
+      courseSessions.forEach(session => {
+        const course = courses.find(c => c.id === session.course_id);
+        if (course && course.instructor_id === user?.id) {
+          events.push({
+            id: `${session.id}`,
+            title: course.title,
+            date: parseISO(session.session_date),
+            type: 'course',
+            isHighlighted: true,
+            details: `${course.category} - ${session.start_time.slice(0, 5)}`,
+          });
+        }
+      });
+    } else {
+      // For other roles, add course start dates
+      courses.forEach(course => {
+        const isHighlighted = role === 'socio' 
+          ? enrollments.some(e => e.course_id === course.id)
           : false;
 
-      events.push({
-        id: course.id,
-        title: course.title,
-        date: parseISO(course.start_date),
-        type: 'course',
-        isHighlighted,
-        details: `${course.category} - ${course.instructor_name}`,
+        events.push({
+          id: course.id,
+          title: course.title,
+          date: parseISO(course.start_date),
+          type: 'course',
+          isHighlighted,
+          details: `${course.category} - ${course.instructor_name}`,
+        });
       });
-    });
+    }
 
     // Add interview events for gestor and monitor
     if (role === 'gestor' || role === 'monitor') {
@@ -153,7 +189,7 @@ export default function CalendarPage() {
     }
 
     return events;
-  }, [courses, enrollments, interviews, profiles, role, user?.id]);
+  }, [courses, courseSessions, enrollments, interviews, profiles, role, user?.id]);
 
   const eventsForSelectedDate = useMemo(() => {
     if (!selectedDate) return [];
