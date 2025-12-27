@@ -117,7 +117,7 @@ export function CourseFormDialog({ open, onOpenChange, course, onSuccess }: Cour
       title: '',
       description: '',
       category: '',
-      instructor_id: '',
+        instructor_id: 'none',
       schedule_days: [],
       schedule_time: '10:00',
       duration: '2 horas',
@@ -133,7 +133,7 @@ export function CourseFormDialog({ open, onOpenChange, course, onSuccess }: Cour
         title: course.title,
         description: course.description || '',
         category: course.category,
-        instructor_id: course.instructor_id || '',
+        instructor_id: course.instructor_id || 'none',
         start_date: new Date(course.start_date),
         end_date: course.end_date ? new Date(course.end_date) : undefined,
         schedule_days: course.schedule_days || [],
@@ -148,7 +148,7 @@ export function CourseFormDialog({ open, onOpenChange, course, onSuccess }: Cour
         title: '',
         description: '',
         category: '',
-        instructor_id: '',
+        instructor_id: 'none',
         schedule_days: [],
         schedule_time: '10:00',
         duration: '2 horas',
@@ -186,15 +186,16 @@ export function CourseFormDialog({ open, onOpenChange, course, onSuccess }: Cour
   async function onSubmit(data: CourseFormData) {
     setIsLoading(true);
     try {
-      const instructorName = data.instructor_id
-        ? professors.find(p => p.id === data.instructor_id)?.name || 'Sin asignar'
+      const instructorId = data.instructor_id === 'none' ? null : data.instructor_id;
+      const instructorName = instructorId
+        ? professors.find(p => p.id === instructorId)?.name || 'Sin asignar'
         : 'Sin asignar';
 
       const courseData = {
         title: data.title,
         description: data.description || null,
         category: data.category,
-        instructor_id: data.instructor_id || null,
+        instructor_id: instructorId,
         instructor_name: instructorName,
         start_date: format(data.start_date, 'yyyy-MM-dd'),
         end_date: format(data.end_date, 'yyyy-MM-dd'),
@@ -310,7 +311,7 @@ export function CourseFormDialog({ open, onOpenChange, course, onSuccess }: Cour
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">Sin asignar</SelectItem>
+                        <SelectItem value="none">Sin asignar</SelectItem>
                         {professors.map(prof => (
                           <SelectItem key={prof.id} value={prof.id}>{prof.name}</SelectItem>
                         ))}
