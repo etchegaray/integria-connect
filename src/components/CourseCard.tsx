@@ -7,10 +7,11 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 interface CourseCardProps {
-  course: Course;
+  course: Course & { instructorId?: string | null };
   showActions?: boolean;
   onEnroll?: (courseId: string) => void;
   onView?: (courseId: string) => void;
+  currentUserId?: string;
 }
 
 const statusConfig = {
@@ -19,10 +20,11 @@ const statusConfig = {
   completed: { label: 'Completado', className: 'bg-muted text-muted-foreground border-border' },
 };
 
-export function CourseCard({ course, showActions = true, onEnroll, onView }: CourseCardProps) {
+export function CourseCard({ course, showActions = true, onEnroll, onView, currentUserId }: CourseCardProps) {
   const status = statusConfig[course.status];
   const availableSpots = course.maxCapacity - course.enrolledCount;
   const isFull = availableSpots <= 0;
+  const isInstructor = currentUserId && course.instructorId === currentUserId;
 
   return (
     <div className="group bg-card rounded-xl border border-border overflow-hidden transition-all hover:shadow-medium hover:border-primary/20">
@@ -87,7 +89,7 @@ export function CourseCard({ course, showActions = true, onEnroll, onView }: Cou
             >
               Ver detalles
             </Button>
-            {course.status !== 'completed' && !isFull && (
+            {course.status !== 'completed' && !isFull && !isInstructor && (
               <Button 
                 className="flex-1 gap-2"
                 onClick={() => onEnroll?.(course.id)}

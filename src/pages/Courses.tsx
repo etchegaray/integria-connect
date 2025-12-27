@@ -4,6 +4,7 @@ import { CourseCard } from '@/components/CourseCard';
 import { CourseFormDialog } from '@/components/courses/CourseFormDialog';
 import { CourseSessionsDialog } from '@/components/courses/CourseSessionsDialog';
 import { CourseEnrollmentsDialog } from '@/components/courses/CourseEnrollmentsDialog';
+import { CourseDetailsDialog } from '@/components/courses/CourseDetailsDialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -41,6 +42,7 @@ export default function Courses() {
   const [formDialogOpen, setFormDialogOpen] = useState(false);
   const [sessionsDialogOpen, setSessionsDialogOpen] = useState(false);
   const [enrollmentsDialogOpen, setEnrollmentsDialogOpen] = useState(false);
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const { role, user } = useAuthContext();
   const { toast } = useToast();
@@ -109,9 +111,14 @@ export default function Courses() {
 
   const handleView = (courseId: string) => {
     const course = courses.find(c => c.id === courseId);
-    if (course && role === 'gestor') {
+    if (!course) return;
+    
+    if (role === 'gestor') {
       setSelectedCourse(course);
       setEnrollmentsDialogOpen(true);
+    } else if (role === 'professor') {
+      setSelectedCourse(course);
+      setDetailsDialogOpen(true);
     } else {
       toast({
         title: 'Detalles del curso',
@@ -221,6 +228,7 @@ export default function Courses() {
                     title: course.title,
                     description: course.description || '',
                     instructor: course.instructor_name,
+                    instructorId: course.instructor_id,
                     duration: course.duration,
                     category: course.category,
                     enrolledCount: course.enrolled_count,
@@ -231,6 +239,7 @@ export default function Courses() {
                   }}
                   onEnroll={handleEnroll}
                   onView={handleView}
+                  currentUserId={user?.id}
                 />
                 {role === 'gestor' && (
                   <div className="absolute top-4 right-4 flex gap-1">
@@ -306,6 +315,12 @@ export default function Courses() {
       <CourseEnrollmentsDialog
         open={enrollmentsDialogOpen}
         onOpenChange={setEnrollmentsDialogOpen}
+        course={selectedCourse}
+      />
+
+      <CourseDetailsDialog
+        open={detailsDialogOpen}
+        onOpenChange={setDetailsDialogOpen}
         course={selectedCourse}
       />
     </div>
